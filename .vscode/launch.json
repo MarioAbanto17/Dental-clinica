@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ClinicaDentalApplication<clinica-dental>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "lmas.clinica_dental.ClinicaDentalApplication",
+            "projectName": "clinica-dental",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
