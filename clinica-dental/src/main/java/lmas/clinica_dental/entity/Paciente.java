@@ -1,5 +1,6 @@
 package lmas.clinica_dental.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -31,6 +32,7 @@ public class Paciente {
     @Column(length = 20)
     private String telefono;
     
+    @JsonIgnore  // No exponer la contraseña en respuestas JSON
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
     
@@ -46,6 +48,7 @@ public class Paciente {
     @Column(name = "contacto_emergencia_tel", length = 20)
     private String contactoEmergenciaTel;
     
+    @JsonIgnore  // No exponer el token de recuperación en respuestas JSON
     @Column(name = "token_recuperacion", length = 100)
     private String tokenRecuperacion;
     

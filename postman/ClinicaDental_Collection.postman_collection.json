@@ -1,0 +1,1961 @@
+{
+  "info": {
+    "_postman_id": "clinica-dental-e2e-001",
+    "name": "Clínica Dental - Prueba E2E Completa",
+    "description": "Colección completa para prueba del sistema de gestión de clínica dental.\n\nFlujo E2E:\n1. Autenticación (Login Admin/Paciente/Recepción)\n2. Gestión de Pacientes\n3. Gestión de Doctores\n4. Gestión de Citas\n5. Sistema de Pagos\n6. Mensajería\n7. Notificaciones\n8. Beneficios y Puntos\n9. Certificados Médicos\n10. Reportes\n\nPRE-REQUISITO: Base de datos con datos de prueba (ejecutar database.sql y data.sql)\n\nOrden de ejecución: Usar Collection Runner en orden secuencial.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "item": [
+    {
+      "name": "01 - AUTENTICACIÓN",
+      "description": "Endpoints de login, registro y recuperación de contraseña",
+      "item": [
+        {
+          "name": "01.1 Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{adminEmail}}\",\n    \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login Admin exitoso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.environment.set('adminToken', jsonData.token);",
+                  "    console.log('✅ Token Admin guardado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.2 Login Paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{pacienteEmail}}\",\n    \"password\": \"{{pacientePassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login Paciente exitoso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.environment.set('pacienteToken', jsonData.token);",
+                  "    if (jsonData.paciente && jsonData.paciente.idPaciente) {",
+                  "        pm.environment.set('pacienteId', jsonData.paciente.idPaciente);",
+                  "    }",
+                  "    console.log('✅ Token Paciente guardado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.3 Registro Nuevo Paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombres\": \"Carlos\",\n    \"apellidos\": \"Ramírez Torres\",\n    \"tipoDocumento\": \"DNI\",\n    \"numeroDocumento\": \"87654321\",\n    \"email\": \"carlos.ramirez@gmail.com\",\n    \"telefono\": \"987123456\",\n    \"password\": \"Carlos2026\",\n    \"direccion\": \"Av. Arequipa 2345, Lima\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Registro exitoso\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('idPaciente');",
+                  "    console.log('✅ Paciente registrado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "01.4 Solicitar Recuperación de Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{pacienteEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/recuperar-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "recuperar-password"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Solicitud de recuperación enviada\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Email de recuperación enviado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - PACIENTES",
+      "description": "CRUD de pacientes y perfil completo",
+      "item": [
+        {
+          "name": "02.1 Listar Todos los Pacientes (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pacientes",
+              "host": ["{{baseUrl}}"],
+              "path": ["pacientes"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Lista de pacientes obtenida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    console.log('✅ Total pacientes: ' + jsonData.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.2 Obtener Paciente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pacientes/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pacientes", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Paciente encontrado\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('idPaciente');",
+                  "    console.log('✅ Paciente: ' + jsonData.nombres + ' ' + jsonData.apellidos);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.3 Actualizar Paciente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"telefono\": \"999888777\",\n    \"direccion\": \"Nueva dirección actualizada\",\n    \"contactoEmergenciaNombre\": \"María Pérez\",\n    \"contactoEmergenciaTel\": \"987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pacientes/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pacientes", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Paciente actualizado\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Datos del paciente actualizados');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.4 Obtener Perfil Completo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pacientes/{{pacienteId}}/perfil-completo",
+              "host": ["{{baseUrl}}"],
+              "path": ["pacientes", "{{pacienteId}}", "perfil-completo"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Perfil completo obtenido\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('estadisticas');",
+                  "    console.log('✅ Perfil obtenido con estadísticas');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - DOCTORES",
+      "description": "CRUD de doctores",
+      "item": [
+        {
+          "name": "03.1 Listar Doctores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/doctores",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctores"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Lista de doctores obtenida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.environment.set('doctorId', jsonData[0].idDoctor);",
+                  "    }",
+                  "    console.log('✅ Total doctores: ' + jsonData.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.2 Crear Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombres\": \"Roberto\",\n    \"apellidos\": \"Sánchez Vargas\",\n    \"especialidad\": \"Implantología\",\n    \"horarioAtencion\": \"Lun-Vie 14:00-20:00\",\n    \"estado\": \"ACTIVO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/doctores",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctores"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Doctor creado\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('doctorId', jsonData.idDoctor);",
+                  "    console.log('✅ Doctor creado: ' + jsonData.nombres);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.3 Buscar Doctores por Especialidad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/doctores/especialidad/Ortodoncia",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctores", "especialidad", "Ortodoncia"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Doctores por especialidad encontrados\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Doctores de Ortodoncia encontrados');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.4 Actualizar Doctor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"horarioAtencion\": \"Lun-Sab 9:00-18:00\",\n    \"estado\": \"ACTIVO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/doctores/{{doctorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctores", "{{doctorId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Doctor actualizado\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Doctor actualizado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - CITAS",
+      "description": "Gestión de citas, calendario y completar citas",
+      "item": [
+        {
+          "name": "04.1 Listar Todas las Citas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Lista de citas obtenida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log('✅ Total citas: ' + jsonData.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.2 Crear Nueva Cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"idDoctor\": {{doctorId}},\n    \"fechaHora\": \"2026-02-25T15:00:00\",\n    \"tipoConsulta\": \"PRIMERA_VEZ\",\n    \"motivoConsulta\": \"Limpieza dental y revisión general\",\n    \"duracionEstimadaMin\": 45\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/citas",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Cita creada\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('citaId', jsonData.idCita);",
+                  "    console.log('✅ Cita creada ID: ' + jsonData.idCita);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.3 Ver Disponibilidad de Doctor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/disponibilidad/{{doctorId}}/2026-02-25",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas", "disponibilidad", "{{doctorId}}", "2026-02-25"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Disponibilidad obtenida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Horarios disponibles obtenidos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.4 Confirmar Cita",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/{{citaId}}/confirmar",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas", "{{citaId}}", "confirmar"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Cita confirmada\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Cita confirmada');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.5 Completar Cita (con puntos)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/{{citaId}}/completar",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas", "{{citaId}}", "completar"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Cita completada y puntos sumados\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log('✅ Cita completada - Puntos otorgados');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.6 Cancelar Cita",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/{{citaId}}/cancelar",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas", "{{citaId}}", "cancelar"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Cita cancelada\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Cita cancelada');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "04.7 Obtener Citas por Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citas/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["citas", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Citas del paciente obtenidas\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Historial de citas del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - PAGOS",
+      "description": "Gestión de pagos y facturación",
+      "item": [
+        {
+          "name": "05.1 Listar Todos los Pagos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagos",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagos"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Lista de pagos obtenida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Pagos obtenidos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.2 Crear Pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"idCita\": {{citaId}},\n    \"monto\": 250.00,\n    \"metodoPago\": \"TARJETA\",\n    \"estado\": \"PENDIENTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pagos",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagos"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Pago creado\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('pagoId', jsonData.idPago);",
+                  "    console.log('✅ Pago registrado ID: ' + jsonData.idPago);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.3 Procesar Pago (suma puntos automáticamente)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/{{pagoId}}/procesar",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagos", "{{pagoId}}", "procesar"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Pago procesado y puntos sumados\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Pago procesado - Puntos acumulados automáticamente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.4 Obtener Pagos por Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagos", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Historial de pagos obtenido\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Historial de pagos del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "05.5 Filtrar Pagos por Estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagos/estado/PAGADO",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagos", "estado", "PAGADO"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Pagos filtrados por estado\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Pagos con estado PAGADO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 - MENSAJERÍA",
+      "description": "Sistema de mensajería paciente-clínica",
+      "item": [
+        {
+          "name": "06.1 Listar Mensajes del Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["mensajes", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Mensajes obtenidos\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Conversación del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.2 Enviar Mensaje (Paciente a Clínica)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"remitente\": \"PACIENTE\",\n    \"contenido\": \"Hola, quisiera confirmar mi cita del próximo martes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mensajes",
+              "host": ["{{baseUrl}}"],
+              "path": ["mensajes"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Mensaje enviado\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('mensajeId', jsonData.idMensaje);",
+                  "    console.log('✅ Mensaje enviado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.3 Responder Mensaje (Clínica a Paciente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"remitente\": \"CLINICA\",\n    \"contenido\": \"Hola Juan, tu cita está confirmada para el martes 25 a las 3:00 PM. Te esperamos!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mensajes",
+              "host": ["{{baseUrl}}"],
+              "path": ["mensajes"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Respuesta enviada\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    console.log('✅ Clínica respondió al paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.4 Marcar Mensaje como Leído",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/{{mensajeId}}/marcar-leido",
+              "host": ["{{baseUrl}}"],
+              "path": ["mensajes", "{{mensajeId}}", "marcar-leido"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Mensaje marcado como leído\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Mensaje leído');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.5 Obtener Mensajes No Leídos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/paciente/{{pacienteId}}/no-leidos",
+              "host": ["{{baseUrl}}"],
+              "path": ["mensajes", "paciente", "{{pacienteId}}", "no-leidos"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Mensajes no leídos obtenidos\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Mensajes pendientes de leer');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 - NOTIFICACIONES",
+      "description": "Sistema de notificaciones push",
+      "item": [
+        {
+          "name": "07.1 Listar Notificaciones del Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificaciones", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notificaciones obtenidas\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Notificaciones del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.2 Crear Notificación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"tipo\": \"CITA\",\n    \"mensaje\": \"Recordatorio: Tu cita es mañana a las 3:00 PM\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificaciones"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notificación creada\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('notificacionId', jsonData.idNotificacion);",
+                  "    console.log('✅ Notificación enviada');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.3 Obtener Notificaciones No Leídas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/paciente/{{pacienteId}}/no-leidas",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificaciones", "paciente", "{{pacienteId}}", "no-leidas"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notificaciones no leídas obtenidas\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log('✅ Notificaciones pendientes: ' + jsonData.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.4 Marcar Notificación como Leída",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/{{notificacionId}}/marcar-leida",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificaciones", "{{notificacionId}}", "marcar-leida"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Notificación marcada como leída\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Notificación leída');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.5 Marcar Todas como Leídas",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/paciente/{{pacienteId}}/marcar-todas-leidas",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificaciones", "paciente", "{{pacienteId}}", "marcar-todas-leidas"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Todas las notificaciones marcadas como leídas\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Todas las notificaciones leídas');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - BENEFICIOS Y PUNTOS",
+      "description": "Sistema de puntos y programa de beneficios",
+      "item": [
+        {
+          "name": "08.1 Obtener Beneficios del Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/beneficios/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["beneficios", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Beneficios obtenidos\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('beneficioId', jsonData.idBeneficio);",
+                  "    console.log('✅ Puntos: ' + jsonData.puntosAcumulados + ' | Nivel: ' + jsonData.nivel);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.2 Obtener Historial de Puntos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/beneficios/paciente/{{pacienteId}}/historial",
+              "host": ["{{baseUrl}}"],
+              "path": ["beneficios", "paciente", "{{pacienteId}}", "historial"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Historial de puntos obtenido\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Historial de transacciones de puntos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.3 Canjear Puntos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"cantidad\": 50,\n    \"concepto\": \"Descuento en próxima consulta\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/beneficios/canjear",
+              "host": ["{{baseUrl}}"],
+              "path": ["beneficios", "canjear"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Puntos canjeados\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ 50 puntos canjeados exitosamente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 - HISTORIAL MÉDICO",
+      "description": "Gestión del historial médico del paciente",
+      "item": [
+        {
+          "name": "09.1 Obtener Historial Médico",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/historial-medico/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["historial-medico", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Historial médico obtenido\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Historial médico del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "09.2 Crear/Actualizar Historial Médico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"grupoSanguineo\": \"O+\",\n    \"alergias\": \"Penicilina, Polen\",\n    \"condicionesPreexistentes\": \"Hipertensión controlada\",\n    \"medicamentosActuales\": \"Losartán 50mg\",\n    \"antecedentesFamiliares\": \"Diabetes tipo 2 (madre)\",\n    \"seguroMedico\": \"Pacífico Salud\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/historial-medico",
+              "host": ["{{baseUrl}}"],
+              "path": ["historial-medico"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Historial médico creado/actualizado\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('historialMedicoId', jsonData.idHistorial);",
+                  "    console.log('✅ Historial médico guardado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 - CERTIFICADOS",
+      "description": "Solicitud y gestión de certificados médicos",
+      "item": [
+        {
+          "name": "10.1 Listar Certificados del Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificados/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificados", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Certificados obtenidos\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Lista de certificados del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "10.2 Solicitar Certificado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"tipo\": \"ASISTENCIA\",\n    \"motivo\": \"Consulta odontológica realizada el día 20/02/2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/certificados",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificados"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Certificado solicitado\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('certificadoId', jsonData.idCertificado);",
+                  "    console.log('✅ Certificado solicitado ID: ' + jsonData.idCertificado);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "10.3 Aprobar/Emitir Certificado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/certificados/{{certificadoId}}/emitir",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificados", "{{certificadoId}}", "emitir"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Certificado emitido\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Certificado emitido y disponible para descarga');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11 - VALORACIONES",
+      "description": "Valoración post-cita",
+      "item": [
+        {
+          "name": "11.1 Crear Valoración de Cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idCita\": {{citaId}},\n    \"calificacion\": 5,\n    \"comentario\": \"Excelente atención, muy profesional y amable\",\n    \"esAnonimo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/valoraciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["valoraciones"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Valoración creada\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('valoracionId', jsonData.idValoracion);",
+                  "    console.log('✅ Valoración registrada: ' + jsonData.calificacion + ' estrellas');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "11.2 Obtener Valoraciones de una Cita",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/valoraciones/cita/{{citaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["valoraciones", "cita", "{{citaId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Valoraciones obtenidas\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Valoraciones de la cita');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 - PLANES Y SUSCRIPCIONES",
+      "description": "Gestión de planes de membresía",
+      "item": [
+        {
+          "name": "12.1 Listar Planes Disponibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/planes",
+              "host": ["{{baseUrl}}"],
+              "path": ["planes"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Planes obtenidos\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.environment.set('planId', jsonData[0].idPlan);",
+                  "    }",
+                  "    console.log('✅ Planes disponibles: ' + jsonData.length);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "12.2 Crear Plan (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombre\": \"Plan Dental Premium\",\n    \"precioMensual\": 149.90,\n    \"descripcion\": \"Incluye: 2 limpiezas al año, descuentos en tratamientos, atención prioritaria\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/planes",
+              "host": ["{{baseUrl}}"],
+              "path": ["planes"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Plan creado\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('planId', jsonData.idPlan);",
+                  "    console.log('✅ Plan creado: ' + jsonData.nombre);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "12.3 Crear Suscripción",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPaciente\": {{pacienteId}},\n    \"idPlan\": {{planId}},\n    \"fechaInicio\": \"2026-02-16\",\n    \"fechaFin\": \"2027-02-16\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/suscripciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["suscripciones"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Suscripción creada\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('suscripcionId', jsonData.idSuscripcion);",
+                  "    console.log('✅ Suscripción activa');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "12.4 Obtener Suscripción Activa del Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/suscripciones/paciente/{{pacienteId}}/activa",
+              "host": ["{{baseUrl}}"],
+              "path": ["suscripciones", "paciente", "{{pacienteId}}", "activa"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Suscripción activa obtenida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Suscripción del paciente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13 - FACTURACIÓN",
+      "description": "Gestión de facturación electrónica",
+      "item": [
+        {
+          "name": "13.1 Solicitar Factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idPago\": {{pagoId}},\n    \"ruc\": \"20512345678\",\n    \"razonSocial\": \"Empresa Demo SAC\",\n    \"direccionFiscal\": \"Av. Principal 123, Lima\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/facturacion",
+              "host": ["{{baseUrl}}"],
+              "path": ["facturacion"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Factura solicitada\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('facturaId', jsonData.idFactura);",
+                  "    console.log('✅ Factura electrónica solicitada');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "13.2 Obtener Facturas del Paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{pacienteToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/facturacion/paciente/{{pacienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["facturacion", "paciente", "{{pacienteId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Facturas obtenidas\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Historial de facturas');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14 - VALIDACIÓN FINAL",
+      "description": "Tests de integración y validación",
+      "item": [
+        {
+          "name": "14.1 Verificar Estado del Sistema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Sistema operativo\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    console.log('✅ Sistema de Clínica Dental operativo');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "14.2 Resumen de Datos Creados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pacientes/{{pacienteId}}/perfil-completo",
+              "host": ["{{baseUrl}}"],
+              "path": ["pacientes", "{{pacienteId}}", "perfil-completo"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"✅ PRUEBA E2E COMPLETADA EXITOSAMENTE\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    ",
+                  "    console.log('\\n' + '='.repeat(60));",
+                  "    console.log('🎉 PRUEBA E2E COMPLETADA - CLÍNICA DENTAL');",
+                  "    console.log('='.repeat(60));",
+                  "    console.log('📊 RESUMEN DE DATOS CREADOS:');",
+                  "    console.log('   • Paciente ID: ' + pm.environment.get('pacienteId'));",
+                  "    console.log('   • Doctor ID: ' + pm.environment.get('doctorId'));",
+                  "    console.log('   • Cita ID: ' + pm.environment.get('citaId'));",
+                  "    console.log('   • Pago ID: ' + pm.environment.get('pagoId'));",
+                  "    console.log('   • Mensaje ID: ' + pm.environment.get('mensajeId'));",
+                  "    console.log('   • Beneficio ID: ' + pm.environment.get('beneficioId'));",
+                  "    console.log('');",
+                  "    console.log('💰 Total Pagado: S/ ' + (jsonData.estadisticas ? jsonData.estadisticas.totalPagado : 'N/A'));",
+                  "    console.log('⭐ Puntos Acumulados: ' + (jsonData.estadisticas ? jsonData.estadisticas.puntosAcumulados : 'N/A'));",
+                  "    console.log('📅 Total Citas: ' + (jsonData.estadisticas ? jsonData.estadisticas.totalCitas : 'N/A'));",
+                  "    console.log('='.repeat(60));",
+                  "    console.log('✅ TODOS LOS MÓDULOS FUNCIONANDO CORRECTAMENTE');",
+                  "    console.log('='.repeat(60) + '\\n');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

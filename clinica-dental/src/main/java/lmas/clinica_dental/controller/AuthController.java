@@ -31,6 +31,42 @@ public class AuthController {
     @Autowired
     private JwtTokenProvider tokenProvider;
     
+    // ENDPOINT DE DEBUG - ELIMINAR EN PRODUCCIÓN
+    @GetMapping("/debug-user/{email}")
+    public ResponseEntity<?> debugUser(@PathVariable String email) {
+        Map<String, Object> debug = new HashMap<>();
+        Optional<Paciente> pacienteOpt = pacienteService.buscarPorEmail(email);
+        
+        if (pacienteOpt.isEmpty()) {
+            debug.put("error", "Usuario no encontrado");
+            return ResponseEntity.ok(debug);
+        }
+        
+        Paciente p = pacienteOpt.get();
+        debug.put("id", p.getIdPaciente());
+        debug.put("email", p.getEmail());
+        debug.put("rol", p.getRol().name());
+        debug.put("estado", p.getEstado().name());
+        debug.put("hash_length", p.getPasswordHash().length());
+        debug.put("hash_start", p.getPasswordHash().substring(0, 20));
+        
+        // Probar con "123456"
+        boolean matches = passwordEncoder.matches("123456", p.getPasswordHash());
+        debug.put("password_123456_matches", matches);
+        
+        return ResponseEntity.ok(debug);
+    }
+    
+    // ENDPOINT TEMPORAL: Generar hash para contraseña
+    @GetMapping("/generate-hash/{password}")
+    public ResponseEntity<?> generateHash(@PathVariable String password) {
+        Map<String, String> response = new HashMap<>();
+        String hash = passwordEncoder.encode(password);
+        response.put("password", password);
+        response.put("hash", hash);
+        return ResponseEntity.ok(response);
+    }
+    
     // RF-REG-001: Registro de paciente
     @PostMapping("/register")
     public ResponseEntity<?> registrar(@RequestBody RegisterRequest request) {

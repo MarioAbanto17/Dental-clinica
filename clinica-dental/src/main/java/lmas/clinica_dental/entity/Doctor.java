@@ -15,6 +15,9 @@ public class Doctor {
     private String nombres;
     
     @Column(nullable = false, length = 100)
+    private String apellidos;
+    
+    @Column(nullable = false, length = 100)
     private String especialidad;
     
     @Column(name = "horario_atencion", length = 100)
@@ -47,6 +50,14 @@ public class Doctor {
     
     public void setNombres(String nombres) {
         this.nombres = nombres;
+    }
+    
+    public String getApellidos() {
+        return apellidos;
+    }
+    
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
     }
     
     public String getEspecialidad() {

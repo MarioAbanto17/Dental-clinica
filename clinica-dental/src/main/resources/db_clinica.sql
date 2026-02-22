@@ -46,6 +46,7 @@ CREATE TABLE historial_medico (
 CREATE TABLE doctores (
     id_doctor INT AUTO_INCREMENT PRIMARY KEY,
     nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
     especialidad VARCHAR(100) NOT NULL, -- RF-CIT-012: Filtro especialidad
     horario_atencion VARCHAR(100),
     estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO'
@@ -173,3 +174,46 @@ CREATE TABLE suscripciones_pacientes (
     FOREIGN KEY (id_paciente) REFERENCES pacientes(id_paciente),
     FOREIGN KEY (id_plan) REFERENCES membresias_planes(id_plan)
 );
+
+-- =============================================
+-- DATOS DE PRUEBA
+-- =============================================
+
+-- Insertar Doctores
+INSERT INTO doctores (nombres, apellidos, especialidad, horario_atencion, estado) VALUES
+('María Elena', 'Rodríguez García', 'Ortodoncia', 'Lun-Vie 9:00-18:00', 'ACTIVO'),
+('Carlos Alberto', 'Mendoza Silva', 'Endodoncia', 'Lun-Vie 10:00-19:00', 'ACTIVO'),
+('Ana Patricia', 'Torres Vega', 'Periodoncia', 'Lun-Sab 8:00-14:00', 'ACTIVO'),
+('José Luis', 'Ramírez Castro', 'Odontología General', 'Lun-Vie 9:00-17:00', 'ACTIVO');
+
+-- Insertar Pacientes de prueba (password: 123456)
+-- Hash BCrypt válido para "123456": $2a$10$1ayLXp1gflEZ39BUt8uYsuG6q17m4f986.H.zxsKMc0p3BbJf8GRK
+INSERT INTO pacientes (nombres, apellidos, tipo_documento, numero_documento, email, telefono, password_hash, direccion, rol, estado) VALUES
+('Juan Carlos', 'Pérez López', 'DNI', '12345678', 'juan@gmail.com', '987654321', '$2a$10$1ayLXp1gflEZ39BUt8uYsuG6q17m4f986.H.zxsKMc0p3BbJf8GRK', 'Av. Principal 123, Lima', 'PACIENTE', 'ACTIVO'),
+('María Isabel', 'García Ruiz', 'DNI', '87654321', 'maria@gmail.com', '987654322', '$2a$10$1ayLXp1gflEZ39BUt8uYsuG6q17m4f986.H.zxsKMc0p3BbJf8GRK', 'Jr. Los Olivos 456, Lima', 'PACIENTE', 'ACTIVO'),
+('Admin', 'Sistema', 'DNI', '11111111', 'admin@clinica.com', '999888777', '$2a$10$1ayLXp1gflEZ39BUt8uYsuG6q17m4f986.H.zxsKMc0p3BbJf8GRK', 'Clínica Dental', 'ADMINISTRADOR', 'ACTIVO');
+
+-- Insertar Programa de Beneficios
+INSERT INTO programa_beneficios (id_paciente, puntos_acumulados, nivel) VALUES
+(1, 150, 'BRONCE'),
+(2, 650, 'PLATA');
+
+-- Insertar Citas de ejemplo
+INSERT INTO citas (id_paciente, id_doctor, fecha_hora, tipo_consulta, motivo_consulta, estado) VALUES
+(1, 1, '2026-02-20 10:00:00', 'PRIMERA_VEZ', 'Consulta general', 'PENDIENTE'),
+(1, 2, '2026-02-22 15:00:00', 'CONTROL', 'Revisión de tratamiento', 'CONFIRMADA'),
+(2, 3, '2026-02-25 11:00:00', 'PRIMERA_VEZ', 'Limpieza dental', 'PENDIENTE');
+
+-- Insertar Pagos
+INSERT INTO pagos (id_paciente, id_cita, monto, metodo_pago, estado) VALUES
+(1, 1, 150.00, 'TARJETA', 'PAGADO'),
+(2, 3, 200.00, 'YAPE', 'PENDIENTE');
+
+-- Insertar Historial de Puntos  
+INSERT INTO historial_puntos (id_paciente, cantidad, concepto) VALUES
+(1, 10, 'Cita completada'),
+(1, 20, 'Puntualidad'),
+(1, 7, 'Pago realizado - S/150'),
+(2, 10, 'Cita completada'),
+(2, 25, 'Pago realizado - S/500');
+

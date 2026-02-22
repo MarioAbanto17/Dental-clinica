@@ -2,14 +2,20 @@ package lmas.clinica_dental.controller;
 
 import lmas.clinica_dental.entity.Cita;
 import lmas.clinica_dental.entity.Doctor;
+import lmas.clinica_dental.entity.ProgramaBeneficios;
+import lmas.clinica_dental.entity.HistorialPuntos;
 import lmas.clinica_dental.service.ICitaService;
 import lmas.clinica_dental.repository.CitaRepository;
 import lmas.clinica_dental.repository.DoctorRepository;
+import lmas.clinica_dental.repository.ProgramaBeneficiosRepository;
+import lmas.clinica_dental.repository.HistorialPuntosRepository;
+import lmas.clinica_dental.repository.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,6 +38,15 @@ public class CitaController {
     
     @Autowired
     private DoctorRepository doctorRepository;
+    
+    @Autowired
+    private ProgramaBeneficiosRepository programaBeneficiosRepository;
+    
+    @Autowired
+    private HistorialPuntosRepository historialPuntosRepository;
+    
+    @Autowired
+    private PacienteRepository pacienteRepository;
     
     @GetMapping
     public ResponseEntity<List<Cita>> listarTodas() {
@@ -163,5 +178,82 @@ public class CitaController {
         }
         
         return ResponseEntity.ok(agenda);
+    }
+    
+    // Completar cita con verificación de puntualidad
+    @PatchMapping("/{id}/completar")
+    public ResponseEntity<Map<String, Object>> completarCita(@PathVariable Integer id) {
+        Optional<Cita> citaOpt = citaService.buscarPorId(id);
+        
+        if (citaOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Cita cita = citaOpt.get();
+        cita.setEstado(Cita.EstadoCita.COMPLETADA);
+        citaService.guardar(cita);
+        
+        // SUMAR PUNTOS BASE por completar la cita
+        Integer idPaciente = cita.getPaciente().getIdPaciente();
+        int puntosTotales = 10; // Base por cita completada
+        String mensajePuntos = "Cita completada (+10 pts)";
+        
+        // VERIFICAR PUNTUALIDAD: si llegó a tiempo (máx 15 min de retraso)
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime horaCita = cita.getFechaHora();
+        Duration diferencia = Duration.between(horaCita, ahora);
+        long minutosRetraso = diferencia.toMinutes();
+        
+        if (minutosRetraso <= 15 && minutosRetraso >= -60) { // Llegó a tiempo o antes
+            puntosTotales += 20; // Bonus por puntualidad
+            mensajePuntos = "Cita completada (+10 pts) + Puntualidad (+20 pts)";
+        }
+        
+        // Sumar puntos al programa de beneficios
+        Optional<ProgramaBeneficios> beneficioOpt = programaBeneficiosRepository.findByPaciente_IdPaciente(idPaciente);
+        ProgramaBeneficios beneficio;
+        
+        if (beneficioOpt.isPresent()) {
+            beneficio = beneficioOpt.get();
+        } else {
+            // Crear programa de beneficios si no existe
+            beneficio = new ProgramaBeneficios();
+            beneficio.setPaciente(pacienteRepository.findById(idPaciente).orElseThrow());
+            beneficio.setPuntosAcumulados(0);
+            beneficio.setNivel(ProgramaBeneficios.NivelBeneficio.BRONCE);
+        }
+        
+        beneficio.setPuntosAcumulados(beneficio.getPuntosAcumulados() + puntosTotales);
+        
+        // Actualizar nivel según puntos
+        if (beneficio.getPuntosAcumulados() >= 1000) {
+            beneficio.setNivel(ProgramaBeneficios.NivelBeneficio.ORO);
+        } else if (beneficio.getPuntosAcumulados() >= 500) {
+            beneficio.setNivel(ProgramaBeneficios.NivelBeneficio.PLATA);
+        }
+        
+        programaBeneficiosRepository.save(beneficio);
+        
+        // Registrar en historial
+        HistorialPuntos historial = new HistorialPuntos();
+        historial.setPaciente(beneficio.getPaciente());
+        historial.setCantidad(puntosTotales);
+        historial.setConcepto(mensajePuntos);
+        historialPuntosRepository.save(historial);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("cita", cita);
+        response.put("puntosGanados", puntosTotales);
+        response.put("mensaje", mensajePuntos);
+        response.put("beneficio", beneficio);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    // Obtener citas de un paciente
+    @GetMapping("/paciente/{idPaciente}")
+    public ResponseEntity<List<Cita>> listarPorPaciente(@PathVariable Integer idPaciente) {
+        List<Cita> citas = citaRepository.findByPaciente_IdPaciente(idPaciente);
+        return ResponseEntity.ok(citas);
     }
 }
